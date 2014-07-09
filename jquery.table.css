@@ -1,0 +1,14 @@
+@charset "utf-8";
+
+table.ui-table { width: 80%; margin: 2em auto; padding:1px; border-spacing: 0; border-collapse: collapse; }
+table.ui-table tr { -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none; -o-user-select: none; }
+table.ui-table thead { }
+table.ui-table thead tr td { font-weight: bolder; font-size: larger; text-align: center; }
+table.ui-table tbody { }
+table.ui-table tbody tr { }
+table.ui-table tbody tr td { padding: 0.4em; overflow: hidden; text-overflow: ellipsis; }
+table.ui-table tbody tr.ui-state-active td { font-weight: bolder; font-size: larger;  }
+
+table.ui-table .ui-icon { display: inline-block; }
+
+table.ui-table.embed { width: 100%; margin: 0.1em auto; }

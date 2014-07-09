@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="jquery.table.css" />
+	<style>
+	</style>
+	<meta charset="utf-8" />
+	<title>jQuery.table test drive</title>
+</head>
+<body>
+	<h3>jQuery.table test drive</h3>
+	<table id="tasks" style="table-layout:fixed;" class="list">
+		<caption>
+			<input type="checkbox">do filter
+		</caption>
+		<thead>
+			<tr>
+				<td data-property="@index" style="width: 1em;"></td>
+				<td data-property="name" style="width: 15em;">名称</td>
+				<td data-property="input" style="width: 8em;">日期</td>
+				<td data-property="item" style="width: 15em;">货品</td>
+				<td data-property="description">描述</td>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	<script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-2.1.0.min.js"></script>
+	<script defer="defer" src="//ajax.aspnetcdn.com/ajax/jquery.ui/1.10.4/jquery-ui.min.js"></script>
+	<script defer="defer" src="jquery.table.js"></script>
+	<script defer="defer">
+$(function () {
+var data = [
+{"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "2014年6月15日 下午5:00:39 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "马丁"}],"url": "https://www.neurun.com/doctors_office/input_task.html","description": "呵呵","input": {"date": {"date": 1402822911681,"string": "2014-06-15 09:01:51 +0000"}}},
+{"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "2014年6月15日 下午5:00:39 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "马丁"}],"url": "https://www.neurun.com/doctors_office/input_task.html","description": "呵呵呵","input": {"date": {"date": 1402822911681,"string": "2014-06-15 09:01:51 +0000"}}},
+{"_id": {"oid": "53a9999a4ca4582000000000"},"name": "2014年6月24日 下午11:30:12 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "外星人 4710 860"}],"url": "http://google.com","description": "呵呵","input": {"date": {"date": 1403623834514,"string": "2014-06-24 15:30:34 +0000"}}}
+];
+$(document.head).append($("<link id=\"ui-theme\" rel=\"stylesheet\">")
+		.attr("href", (window.localStorage && localStorage.theme_url) ? localStorage.theme_url : "//ajax.aspnetcdn.com/ajax/jquery.ui/1.10.4/themes/smoothness/jquery-ui.css"));
+var checkbox = $("#tasks caption :checkbox").click(function() {
+	table.table("draw");
+});
+var table = $("#tasks").table({
+	source: data,
+	sort: {
+		name: true, input: "input.date.date"
+	},
+	filter: function(row) {
+		return checkbox.is(":checked") ? row.description === "呵呵" : true;
+	},
+	custom: {
+		input: $.table.date_n_ip,
+		item: function(row) {
+			var ul = $("<ul>");
+			$(row.item).each(function() {
+				ul.append($("<li>").text(this.name));
+			});
+			return ul;
+		},
+		description: function(row) { return $("<td>").html(row.description); }
+	}
+});
+
+});
+	</script>
+</body>
+</html>
