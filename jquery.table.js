@@ -105,19 +105,26 @@ methods.options = function() {
 	}
 }
 methods.load = function() {
-	var table = this, options = table.data("table.options");
+	var table = this, options = table.data("table.options"), 
+		tbody = table.find("tbody"), cache = table.data("table.cache");
 	if (typeof options.source === "string") { // 数据源是字符串
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			data: options.requestData || {}
 		}).done(function(data) {
+			table.data("table.cache", null);
+			tbody.empty();
 			if ($.isFunction(options.responseData))
 				data = options.responseData(data);
 			table.table("draw", data).trigger("done");
 		});
 	} else if ($.isArray(options.source)) { // 数据源是数组
+		table.data("table.cache", null);
+		tbody.empty();
 		table.table("draw", options.source).trigger("done");
 	} else if ($.isFunction(options.source)) { // 数据源是函数
+		table.data("table.cache", null);
+		tbody.empty();
 		table.table("draw", options.source()).trigger("done");
 	}
 };
