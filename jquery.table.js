@@ -110,6 +110,7 @@ methods.load = function() {
 	if (typeof options.source === "string") { // 数据源是字符串
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
+			dataType: options.requestDataType || "json",
 			data: options.requestData || {}
 		}).done(function(data) {
 			table.data("table.cache", null);
