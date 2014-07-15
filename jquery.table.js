@@ -139,8 +139,6 @@ methods.drawRows = function(row, rowIndex) {
 	$(options.rows).each(function() {
 		var _row = this, tr = $.isFunction(options.tr) ? options.tr(_row) : $("<tr>");
 		tr.addClass("ui-state-default");
-		if (options.active(row)) { tr.addClass("ui-state-active"); }
-		if (options.highlight(row)) { tr.addClass("ui-state-highlight"); }
 		$(_row).each(function () {
 			var _column = this["data-property"], extra = $.extend({}, this);
 			var val;
@@ -180,8 +178,20 @@ methods.draw = function(data) {
 		cache = _sort(cache.slice(), options.sorting.field, options.sorting.order, options);
 	}
 	$(cache).each(function(i) {
-		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true;
-		$(this.rows).each(function() { $(this).css("display", filtered ? "" : "none"); });
+		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true,
+			active = $.isFunction(options.active) ? options.active(this.data) : false,
+			highlight = $.isFunction(options.highlight) ? options.highlight(this.data) : false;
+		$(this.rows).each(function() {
+			var $this = $(this).css("display", filtered ? "" : "none");
+			if (active)
+				$this.addClass("ui-state-active");
+			else
+				$this.removeClass("ui-state-active");
+			if (highlight)
+				$this.addClass("ui-state-highlight");
+			else
+				$this.removeClass("ui-state-highlight");
+		});
 		tbody.append.apply(tbody, this.rows);
 	});
 	if (options.scrollIntoView) {
@@ -212,9 +222,6 @@ var defaults = {
 	custom: {
 		"@index": function(row, extra, i) { return (this.hasClass("ui-state-active")) ? ">" : (i + 1); }
 	},
-	filter: function(row) { return true; },
-	active: function(row) { return false; },
-	highlight: function(row) { return false; },
 	defaultSort: function(cache, field, order) {
 		return !!order ? cache.sort(function(a, b) {
 			var _a = _eval(a.data, field), _b = _eval(b.data, field);
