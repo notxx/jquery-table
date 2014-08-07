@@ -137,8 +137,9 @@ methods.sort = function(sort) {
 methods.drawRows = function(row, rowIndex) {
 	var table = this, options = table.data("table.options"), result = [];
 	$(options.rows).each(function() {
-		var _row = this, tr = $.isFunction(options.tr) ? options.tr(_row) : $("<tr>");
-		tr.addClass("ui-state-default");
+		var _row = this,
+			tr = $.isFunction(options.tr) ? options.tr(row) 
+				: $("<tr>").addClass("ui-state-default");
 		$(_row).each(function () {
 			var _column = this["data-property"], extra = $.extend({}, this);
 			var val;
