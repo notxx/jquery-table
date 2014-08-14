@@ -1,7 +1,7 @@
 (function($) {
 
 var methods = {};
-methods.init = function(options) {
+methods.init = function(options) { // 初始化
 	var table = this;
 	if (table.data("table.options")) { return; }
 	if (typeof options === "object")
@@ -85,7 +85,7 @@ methods.init = function(options) {
 		});
 	}).table("load");
 };
-methods.options = function() {
+methods.options = function() { // 存取选项
 	var table = this, options = table.data("table.options");
 	if (arguments.length == 0) {
 		return options;
@@ -104,7 +104,7 @@ methods.options = function() {
 		return this;
 	}
 }
-methods.load = function() {
+methods.load = function() { // 载入数据
 	var table = this, options = table.data("table.options"), 
 		tbody = table.find("tbody"), cache = table.data("table.cache");
 	if (typeof options.source === "string") { // 数据源是字符串
@@ -129,12 +129,12 @@ methods.load = function() {
 		table.table("draw", options.source()).trigger("done");
 	}
 };
-methods.sort = function(sort) {
+methods.sort = function(sort) { // 排序
 	var table = this, options = table.data("table.options");
 	options.sorting = sort;
 	table.table("draw").trigger("sort", sort);
 };
-methods.drawRows = function(row, rowIndex) {
+methods.drawRows = function(row, rowIndex) { // 绘制一行
 	var table = this, options = table.data("table.options"), result = [];
 	$(options.rows).each(function() {
 		var _row = this,
@@ -162,7 +162,7 @@ methods.drawRows = function(row, rowIndex) {
 	});
 	return result;
 }
-methods.draw = function(data) {
+methods.draw = function(data) { // 绘制整个表格
 	var table = this, options = table.data("table.options"), 
 		tbody = table.find("tbody"), cache = table.data("table.cache");
 	if (!cache) { // no existing cache
@@ -202,14 +202,14 @@ methods.draw = function(data) {
 	return this;
 };
 
-function _eval(context, field) {
+function _eval(context, expr) { // 对表达式求值
 	with (context) {
 		try {
-			return eval("(" + field + ")");
+			return eval("(" + expr + ")");
 		} catch (e) {}
 	}
 }
-function _sort(cache, field, order, options) {
+function _sort(cache, field, order, options) { // 对缓存排序
 	var func = options.sort[options.sorting.field];
 	if ($.isFunction(func))
 		return func(cache, options.sorting.field, options.sorting.order);
@@ -228,9 +228,9 @@ var defaults = {
 			var _a = _eval(a.data, field), _b = _eval(b.data, field);
 			if (typeof _a === "undefined" || typeof _a === "null") { _a = ""; } // "" 可以排序
 			if (typeof _b === "undefined" || typeof _b === "null") { _b = ""; } // "" 可以排序
-			if ($.isNumeric(_a) && $.isNumeric(_b))
+			if ($.isNumeric(_a) && $.isNumeric(_b)) // 进行数值比较
 				return (_a - _b) * order;
-			else if (String.prototype.localeCompare)
+			else if (String.prototype.localeCompare) // 进行本地化字符串比较
 				return String.prototype.localeCompare.apply(_a, [ _b ]) * order;
 			else if (_a < b)
 				return -1 * order;
@@ -244,7 +244,7 @@ var defaults = {
 };
 
 $.fn.table = function(method) {
-	if(!this.is("table")) return this;  // stop here if the form does not exist
+	if(!this.is("table")) return this;  // stop here if the table does not exist
 
 	if (typeof(method) == 'string' && method.charAt(0) != '_' && methods[method]) {
 		return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
