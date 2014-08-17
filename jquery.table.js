@@ -11,15 +11,16 @@ methods.init = function(options) { // 初始化
 	options.custom = $.extend({}, defaults.custom, options.custom);
 	options.sort = $.extend({}, defaults.sort, options.sort);
 	this.data("table.options", options);
-	
-	if (typeof options.source === "string") { // 数据源是字符串
+
+	if (options.source === "virtual") { // 虚拟数据源，即手工敲入行
+	} else if (typeof options.source === "string") { // 数据源是字符串
 	} else if ($.isArray(options.source)) { // 数据源是数组
 	} else if ($.isFunction(options.source)) { // 数据源是函数
 	} else {
 		return false;
 	}
 
-	if (!options.rows) {
+	if (!options.rows) { // 没有指定行绘制方式就自动通过表格产生
 		var rows = options.rows = [];
 		table.find("thead tr").each(function(i) {
 			var columns = [], tr = $(this);
@@ -33,12 +34,12 @@ methods.init = function(options) { // 初始化
 				prop.rowspan = td.attr("rowspan");
 				prop.width = td.attr("width");
 				columns.push(prop);
-				if (options.sort[pn]) {
+				if (options.sort[pn]) { // 产生排序按钮
 					var a = $("<a href='javascript:void(0)' class='sort'>"),
 						contents = td.contents(), icon = $("<span class='ui-icon ui-icon-triangle-2-n-s'>");
 					td.append(a.append(icon).append(contents));
 					a.data("icon", icon)
-					.data("sort", { field: pn, order: "neutral" })
+					.data("sort", { field: pn, order: 0 })
 					.click(function() {
 						var a = $(this), sort = a.data("sort");
 						switch (sort.order) {
@@ -107,7 +108,9 @@ methods.options = function() { // 存取选项
 methods.load = function() { // 载入数据
 	var table = this, options = table.data("table.options"), 
 		tbody = table.find("tbody"), cache = table.data("table.cache");
-	if (typeof options.source === "string") { // 数据源是字符串
+	if (options.source === "virtual") { // 虚拟数据源
+		// do nothing
+	} else if (typeof options.source === "string") { // 数据源是字符串
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
@@ -162,6 +165,13 @@ methods.drawRows = function(row, rowIndex) { // 绘制一行
 	});
 	return result;
 }
+methods.insert = function(row, rowIndex) { // 插入一行到表格，仅可在虚拟数据源下使用
+	var table = this, options = table.data("table.options"), 
+		tbody = table.find("tbody");
+	if (options.source !== "virtual") { throw new Error("options.source !== 'virtual'") }
+	var rows = table.table("drawRows", row, rowIndex);
+	tbody.append.apply(tbody, rows);
+}
 methods.draw = function(data) { // 绘制整个表格
 	var table = this, options = table.data("table.options"), 
 		tbody = table.find("tbody"), cache = table.data("table.cache");
@@ -170,7 +180,7 @@ methods.draw = function(data) { // 绘制整个表格
 		tbody = tbody.empty();
 		cache = [];
 		table.data("table.cache", cache);
-		$(data).each(function(i) {
+		$(data).each(function(i) { // 通过数据产生缓存
 			var rows = table.table("drawRows", this, i);
 			cache.push({ data: this, rows: rows });
 		});
