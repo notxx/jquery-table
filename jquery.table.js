@@ -270,17 +270,16 @@ $.fn.table = function(method) {
 
 $.table = {};
 $.table.date_n_ip = function(row, extra) {
-	var field = extra["data-property"];
-	if (row[field]) { // date & IP
+	var field = extra["data-property"], value = row[field];
+	if (value) { // date & IP
 		var td = $("<td>");
-		if (row[field].IP)
-			td.addClass("X-Real-IP").attr("title", row[field].IP).tooltip();
-		if (row[field].date && typeof row[field].date.date === "number") {
-			var date = new Date(row[field].date.date);
-			if ($.fn.timeago)
-				td.append($("<time>").addClass("timeago").attr("datetime", date.toISOString()).timeago());
-			else
-				td.text(date.toLocaleString());
+		if (value.IP)
+			td.addClass("X-Real-IP").attr("title", value.IP).tooltip();
+		if (typeof value.date === "number") {
+			td.text(new Date(value.date).toLocaleDateString());
+		} else if (value.date && typeof value.date.date === "number") {
+			var date = new Date(value.date.date);
+			td.text(date.toLocaleDateString());
 		} else {
 			td.text("??");
 		}
