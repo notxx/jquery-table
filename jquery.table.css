@@ -9,6 +9,27 @@ table.ui-table tbody tr { }
 table.ui-table tbody tr td { padding: 0.4em; overflow: hidden; text-overflow: ellipsis; }
 table.ui-table tbody tr.ui-state-active td { font-weight: bolder; font-size: larger;  }
 
+/* loading */
+table.ui-table caption.more { margin: .4em auto; }
+table.ui-table div.loading { width: 3.6em; height: 1.2em; margin: .4em auto; }
+table.ui-table div.loading > div { display: inline-block; width: 1em; height: 1em; margin: .1em; border-radius: 100%; background-color: #f00; -webkit-animation: bouncedelay 1.4s infinite ease-in-out; animation: bouncedelay 1.4s infinite ease-in-out; -webkit-animation-fill-mode: both; animation-fill-mode: both; }
+table.ui-table div.loading > div.one { -webkit-animation-delay: -0.32s; animation-delay: -0.32s; }
+table.ui-table div.loading > div.two { -webkit-animation-delay: -0.16s; animation-delay: -0.16s; }
+table.ui-table div.loading > div.three {}
+@-webkit-keyframes bouncedelay {
+	0%, 80%, 100% { -webkit-transform: scale(0.0) }
+	40% { -webkit-transform: scale(1.0) }
+}
+@keyframes bouncedelay {
+	0%, 80%, 100% {
+		transform: scale(0.0);
+		-webkit-transform: scale(0.0);
+	} 40% {
+		transform: scale(1.0);
+		-webkit-transform: scale(1.0);
+	}
+}
+
 table.ui-table .ui-icon { display: inline-block; }
 
 table.ui-table.embed { width: 100%; margin: 0.1em auto; }

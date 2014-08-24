@@ -3,7 +3,11 @@ var _const = {
 	options: "table.options",
 	data: "table.data",
 	cache: "table.cache"
-}
+};
+var _events = {
+	draw: "uitable-draw",
+	done: "done" // TODO
+};
 var methods = {};
 methods.init = function(options) { // 初始化
 	var table = this;
@@ -66,7 +70,7 @@ methods.init = function(options) { // 初始化
 		});
 	}
 
-	table.addClass("ui-table").on("sort", function(e, data) {
+	table.table("link", _events.draw, _events.done).addClass("ui-table").on("sort", function(e, data) {
 		table.find("a.sort").each(function() {
 			var a = $(this), icon = a.data("icon"), sort = a.data("sort");
 			//console.log(data, a.data("sort"));
@@ -109,44 +113,50 @@ methods.options = function() { // 存取选项
 		return this;
 	}
 }
+methods.link = function(event1, event2) { // link two events
+	var table = this, options = table.data(_const.options),
+		tbody = table.find("tbody"), cache = table.data(_const.cache);
+	table.on(event1, function() {
+		window.setTimeout(function() {
+			table.trigger(event2);
+		}, 0);
+	});
+	return this;
+}
 methods.load = function() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
+	var data = $.isFunction(options.requestData)
+			? options.requestData({ skip: 0, limit: options.limit })
+			: options.requestData;
 	if (options.source === "virtual") { // 虚拟数据源
 		throw new Error("invalid operation 'load()' on virtual mode")
 	} else if (typeof options.source === "string") { // 数据源是字符串
-		var data = $.isFunction(options.requestData)
-				? options.requestData({ skip: 0, limit: options.limit })
-				: options.requestData;
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
-			data: data || {}
+			data: data || { skip: 0, limit: options.limit }
 		}).done(function(data) {
 			if ($.isFunction(options.responseData))
 				data = options.responseData(data);
-			table.table("consume", data).trigger("done");
+			table.table("consume", data);
 		});
 	} else if ($.isArray(options.source)) { // 数据源是数组
-		table.data(_const.cache, null);
-		tbody.empty();
-		table.table("consume", options.source).trigger("done");
+		table.table("consume", options.source);
 	} else if ($.isFunction(options.source)) { // 数据源是函数
-		table.data(_const.cache, null);
-		tbody.empty();
-		table.table("consume", options.source()).trigger("done");
+		table.table("consume", options.source(data));
 	}
 	return this;
 };
 methods.more = function() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
+	var data = $.isFunction(options.requestData)
+			? options.requestData({ skip: cache.next, limit: options.limit })
+			: options.requestData;
 	if (options.source === "virtual") { // 虚拟数据源
 		throw new Error("invalid operation 'more()' on virtual mode")
 	} else if (typeof options.source === "string") { // 数据源是字符串
-		var data = $.isFunction(options.requestData)
-				? options.requestData({ skip: cache.next, limit: options.limit })
-				: options.requestData;
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
@@ -154,12 +164,12 @@ methods.more = function() { // 载入数据
 		}).done(function(data) {
 			if ($.isFunction(options.responseData))
 				data = options.responseData(data);
-			table.table("consume", data).trigger("done");
+			table.table("consume", data);
 		});
 	} else if ($.isArray(options.source)) { // 数据源是数组
 		throw new Error("invalid operation 'more()' on static mode")
 	} else if ($.isFunction(options.source)) { // 数据源是函数
-		// TODO
+		table.table("consume", options.source(data));
 	}
 	return this;
 };
@@ -195,18 +205,17 @@ methods.consume = function(data) { // 将数据转化到缓存
 	});
 	var more = table.find("caption.more");
 	if (cache.more) {
-		var button;
+		function load_more() {
+			table.table("more");
+			more.empty().append(options.loading);
+		}
 		if (!more.length) {
 			more = $("<caption class='more' align='bottom'>").appendTo(table)
-			button = $("<a href='javascript:void(0)'>").appendTo(more)
-			.click(function() {
-				table.table("more");
-				button.text("…");
-			});
-		} else {
-			button = more.find("a");
 		}
-		button.text(cache.next + "/" + data.$count + " 载入更多");
+		table.one(_events.done, function() {
+			$("<a href='javascript:void(0)'>").appendTo(more.empty())
+			.text(cache.next + "/" + data.$count + " 载入更多").click(load_more);
+		});
 	} else {
 		more.remove();
 	}
@@ -282,6 +291,7 @@ methods.draw = function(data) { // 将缓存绘制到表格
 		var self = this;
 		window.setTimeout(function() {
 			tbody.append.apply(tbody, self.rows);
+			table.trigger(_events.draw);
 		}, 10);
 	});
 	if (options.scrollIntoView) {
@@ -313,6 +323,7 @@ var defaults = {
 	custom: {
 		"@index": function(row, extra, i) { return (this.hasClass("ui-state-active")) ? ">" : (i + 1); }
 	},
+	loading: $("<div class='loading'>").append("<div class='one'>").append("<div class='two'>").append("<div class='three'>"),
 	defaultSort: function(cache, field, order) {
 		return !!order ? cache.sort(function(a, b) {
 			var _a = _eval(a.data, field), _b = _eval(b.data, field);
