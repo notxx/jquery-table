@@ -6,6 +6,7 @@ var _const = {
 };
 var _events = {
 	draw: "uitable-draw",
+	drawend: "uitable-drawend",
 	done: "done" // TODO
 };
 var methods = {};
@@ -70,7 +71,7 @@ methods.init = function(options) { // 初始化
 		});
 	}
 
-	table.table("link", _events.draw, _events.done).addClass("ui-table").on("sort", function(e, data) {
+	table.table("link", _events.drawend, _events.done).addClass("ui-table").on("sort", function(e, data) {
 		table.find("a.sort").each(function() {
 			var a = $(this), icon = a.data("icon"), sort = a.data("sort");
 			//console.log(data, a.data("sort"));
@@ -273,6 +274,7 @@ methods.draw = function(data) { // 将缓存绘制到表格
 	if (options.sorting) {
 		cache = _sort(cache.slice(), options.sorting.field, options.sorting.order, options);
 	}
+	var drawCache = [], MAX = 50;
 	$(cache).each(function(i) {
 		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true,
 			active = $.isFunction(options.active) ? options.active(this.data) : false,
@@ -288,12 +290,16 @@ methods.draw = function(data) { // 将缓存绘制到表格
 			else
 				$this.removeClass("ui-state-highlight");
 		});
-		var self = this;
-		window.setTimeout(function() {
-			tbody.append.apply(tbody, self.rows);
-			table.trigger(_events.draw);
-		}, 10);
+		drawCache = drawCache.concat(this.rows);
+		if (drawCache.length >= MAX || i === cache.length - 1) { // 应输出
+			window.setTimeout(function(rows) {
+				tbody.append.apply(tbody, rows);
+				table.trigger(_events.draw);
+			}, 10, drawCache);
+			drawCache = [];
+		}
 	});
+	table.trigger(_events.drawend);
 	if (options.scrollIntoView) {
 		var rows = $(options.scrollIntoView, table);
 		if (rows.length) { rows[0].scrollIntoView(); }
