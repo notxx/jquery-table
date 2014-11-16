@@ -193,9 +193,10 @@ methods.consume = function(data) { // 将数据转化到缓存
 	}
 	
 	if (data.$skip == 0 || !cache) { // 初始化缓存，清空表格
-		tbody = tbody.empty();
+		//tbody = tbody.empty();
 		cache = [];
 	}
+	cache.lastModified = new Date().getTime();
 	cache.skip = data.$skip;
 	cache.next = data.$skip + data.$limit;
 	cache.more = cache.next < data.$count;
@@ -264,7 +265,8 @@ methods.insert = function(row, rowIndex) { // 插入一行到表格，仅可在�
 	tbody.append.apply(tbody, rows);
 }
 methods.draw = function(data) { // 将缓存绘制到表格
-	var table = this, tbody = table.find("tbody"),
+	var table = this, $tbody = table.find("tbody"),
+		timestamp = $tbody.data("timestamp"),
 		options = table.data(_const.options),
 		data = table.data(_const.data),
 		cache = table.data(_const.cache);
@@ -272,9 +274,9 @@ methods.draw = function(data) { // 将缓存绘制到表格
 		throw new Error("no cache");
 	}
 	if (options.sorting) {
-		cache = _sort(cache.slice(), options.sorting.field, options.sorting.order, options);
+		cache = _sort(cache, options.sorting.field, options.sorting.order, options);
 	}
-	var drawCache = [], MAX = 50;
+	var drawCache = [], MAX = 50, index = 0;
 	$(cache).each(function(i) {
 		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true,
 			active = $.isFunction(options.active) ? options.active(this.data) : false,
@@ -291,11 +293,24 @@ methods.draw = function(data) { // 将缓存绘制到表格
 				$this.removeClass("ui-state-highlight");
 		});
 		drawCache = drawCache.concat(this.rows);
+		index += this.rows.length;
 		if (drawCache.length >= MAX || i === cache.length - 1) { // 应输出
-			window.setTimeout(function(rows) {
-				tbody.append.apply(tbody, rows);
+			window.setTimeout(function(rows, start) {
+				var $trs = $tbody.find("tr");
+				if (!timestamp || timestamp === cache.lastModified || !$trs.length) { // 直接添加
+					$tbody.data("timestamp", cache.lastModified);
+					$.each(rows, function() { $tbody.append(this); });
+				} else { // 替换
+					$.each(rows, function(j) {
+						var $old = $($trs[start + j]);
+						if ($old.length) {
+							this.insertAfter($old);
+							$old.remove();
+						} else { $tbody.append(this); }
+					});
+				}
 				table.trigger(_events.draw);
-			}, 10, drawCache);
+			}, 10, drawCache, index - drawCache.length);
 			drawCache = [];
 		}
 	});
@@ -315,13 +330,17 @@ function _eval(context, expr) { // 对表达式求值
 	}
 }
 function _sort(cache, field, order, options) { // 对缓存排序
-	var func = options.sort[options.sorting.field];
+	var func = options.sort[options.sorting.field],
+		dup = cache.slice(),
+		result;
 	if ($.isFunction(func))
-		return func(cache, options.sorting.field, options.sorting.order);
+		result = func(dup, options.sorting.field, options.sorting.order);
 	else if (typeof func === "string")
-		return options.defaultSort(cache, func, options.sorting.order); // using replacement field
+		result = options.defaultSort(dup, func, options.sorting.order); // using replacement field
 	else
-		return options.defaultSort(cache, options.sorting.field, options.sorting.order);
+		result = options.defaultSort(dup, options.sorting.field, options.sorting.order);
+	$(["lastModified", "skip", "next", "more"]).each(function() { result[this] = cache[this]; });
+	return result;
 }
 
 var defaults = {
