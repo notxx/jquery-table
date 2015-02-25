@@ -277,11 +277,11 @@ methods.draw = function(data) { // 将缓存绘制到表格
 		cache = _sort(cache, options.sorting.field, options.sorting.order, options);
 	}
 	var drawCache = [], MAX = 50, index = 0;
-	$(cache).each(function(i) {
+	$.each(cache, function(i) {
 		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true,
 			active = $.isFunction(options.active) ? options.active(this.data) : false,
 			highlight = $.isFunction(options.highlight) ? options.highlight(this.data) : false;
-		$(this.rows).each(function() {
+		$.each(this.rows, function() {
 			var $this = $(this).css("display", filtered ? "" : "none");
 			if (active)
 				$this.addClass("ui-state-active");
@@ -297,16 +297,18 @@ methods.draw = function(data) { // 将缓存绘制到表格
 		if (drawCache.length >= MAX || i === cache.length - 1) { // 应输出
 			window.setTimeout(function(rows, start) {
 				var $trs = $tbody.find("tr");
-				if (!timestamp || timestamp === cache.lastModified || !$trs.length) { // 直接添加
+				if (!timestamp || timestamp !== cache.lastModified || !$trs.length) { // 不是排序，直接添加
 					$tbody.data("timestamp", cache.lastModified);
 					$.each(rows, function() { $tbody.append(this); });
 				} else { // 替换
 					$.each(rows, function(j) {
 						var $old = $($trs[start + j]);
-						if ($old.length) {
+						if (!$old.length) {
+							$tbody.append(this);
+						} else if ($old[0] != this[0]) {
 							this.insertAfter($old);
 							$old.remove();
-						} else { $tbody.append(this); }
+						}
 					});
 				}
 				table.trigger(_events.draw);
