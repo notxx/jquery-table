@@ -130,6 +130,7 @@ methods.load = function() { // 载入数据
 	var data = $.isFunction(options.requestData)
 			? options.requestData({ skip: 0, limit: options.limit })
 			: options.requestData;
+	table.data(_const.cache, null);
 	if (options.source === "virtual") { // 虚拟数据源
 		throw new Error("invalid operation 'load()' on virtual mode")
 	} else if (typeof options.source === "string") { // 数据源是字符串
@@ -158,11 +159,18 @@ methods.more = function() { // 载入数据
 	if (options.source === "virtual") { // 虚拟数据源
 		throw new Error("invalid operation 'more()' on virtual mode")
 	} else if (typeof options.source === "string") { // 数据源是字符串
+		if (cache.loading)
+			return this;
+		cache.loading = true;
+		var $more = table.find("caption.more");
+		if ($more.length)
+			$more.empty().append(options.loading);
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
 			data: data || { skip: cache.next, limit: options.limit }
 		}).done(function(data) {
+			cache.loading = false;
 			if ($.isFunction(options.responseData))
 				data = options.responseData(data);
 			table.table("consume", data);
@@ -193,7 +201,7 @@ methods.consume = function(data) { // 将数据转化到缓存
 	}
 	
 	if (data.$skip == 0 || !cache) { // 初始化缓存，清空表格
-		//tbody = tbody.empty();
+		tbody = tbody.empty();
 		cache = [];
 	}
 	cache.lastModified = new Date().getTime();
@@ -205,21 +213,18 @@ methods.consume = function(data) { // 将数据转化到缓存
 		var rows = table.table("rows", this, cache.skip + i);
 		cache.push({ data: this, rows: rows });
 	});
-	var more = table.find("caption.more");
+	var $more = table.find("caption.more");
 	if (cache.more) {
-		function load_more() {
-			table.table("more");
-			more.empty().append(options.loading);
-		}
-		if (!more.length) {
-			more = $("<caption class='more' align='bottom'>").appendTo(table)
+		if (!$more.length) {
+			$more = $("<caption class='more' align='bottom'>").appendTo(table)
 		}
 		table.one(_events.done, function() {
-			$("<a href='javascript:void(0)'>").appendTo(more.empty())
-			.text(cache.next + "/" + data.$count + " 载入更多").click(load_more);
+			$("<a href='javascript:void(0)'>").appendTo($more.empty())
+			.text(cache.next + "/" + data.$count + " 载入更多")
+			.click(function load_more() { table.table("more"); });
 		});
 	} else {
-		more.remove();
+		$more.remove();
 	}
 	table.table("draw");
 	return this;
@@ -269,15 +274,15 @@ methods.draw = function(data) { // 将缓存绘制到表格
 		timestamp = $tbody.data("timestamp"),
 		options = table.data(_const.options),
 		data = table.data(_const.data),
-		cache = table.data(_const.cache);
+		cache = table.data(_const.cache),
+		toDraw;
 	if (!cache) { // 缓存不存在
 		throw new Error("no cache");
 	}
-	if (options.sorting) {
-		cache = _sort(cache, options.sorting.field, options.sorting.order, options);
-	}
+	toDraw = options.sorting ?
+		_sort(cache.slice(), options.sorting.field, options.sorting.order, options) : cache;
 	var drawCache = [], MAX = 50, index = 0;
-	$.each(cache, function(i) {
+	$.each(toDraw, function(i) {
 		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true,
 			active = $.isFunction(options.active) ? options.active(this.data) : false,
 			highlight = $.isFunction(options.highlight) ? options.highlight(this.data) : false;
@@ -332,17 +337,13 @@ function _eval(context, expr) { // 对表达式求值
 	}
 }
 function _sort(cache, field, order, options) { // 对缓存排序
-	var func = options.sort[options.sorting.field],
-		dup = cache.slice(),
-		result;
+	var func = options.sort[options.sorting.field]
 	if ($.isFunction(func))
-		result = func(dup, options.sorting.field, options.sorting.order);
+		return func(cache, options.sorting.field, options.sorting.order);
 	else if (typeof func === "string")
-		result = options.defaultSort(dup, func, options.sorting.order); // using replacement field
+		return options.defaultSort(cache, func, options.sorting.order); // using replacement field
 	else
-		result = options.defaultSort(dup, options.sorting.field, options.sorting.order);
-	$(["lastModified", "skip", "next", "more"]).each(function() { result[this] = cache[this]; });
-	return result;
+		return options.defaultSort(cache, options.sorting.field, options.sorting.order);
 }
 
 var defaults = {
@@ -351,6 +352,7 @@ var defaults = {
 		"@index": function(row, extra, i) { return (this.hasClass("ui-state-active")) ? ">" : (i + 1); }
 	},
 	loading: $("<div class='loading'>").append("<div class='one'>").append("<div class='two'>").append("<div class='three'>"),
+	autoMore: "scroll",
 	defaultSort: function(cache, field, order) {
 		return !!order ? cache.sort(function(a, b) {
 			var _a = _eval(a.data, field), _b = _eval(b.data, field);
