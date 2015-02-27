@@ -301,18 +301,16 @@ methods.draw = function(data) { // 将缓存绘制到表格
 		index += this.rows.length;
 		if (drawCache.length >= MAX || i === cache.length - 1) { // 应输出
 			window.setTimeout(function(rows, start) {
-				var $trs = $tbody.find("tr");
-				if (!timestamp || timestamp !== cache.lastModified || !$trs.length) { // 不是排序，直接添加
+				if (!timestamp || timestamp !== cache.lastModified || !$tbody.children("tr").length) { // 不是排序，直接添加
 					$tbody.data("timestamp", cache.lastModified);
 					$.each(rows, function() { $tbody.append(this); });
 				} else { // 替换
 					$.each(rows, function(j) {
-						var $old = $($trs[start + j]);
+						var $old = $($tbody.children("tr")[start + j]);
 						if (!$old.length) {
 							$tbody.append(this);
 						} else if ($old[0] != this[0]) {
-							this.insertAfter($old);
-							$old.remove();
+							$old.replaceWith(this);
 						}
 					});
 				}
