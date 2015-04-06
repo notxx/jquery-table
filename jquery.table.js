@@ -205,8 +205,8 @@ methods.consume = function(data) { // 将数据转化到缓存
 		cache = [];
 	}
 	cache.lastModified = new Date().getTime();
-	cache.skip = data.$skip;
-	cache.next = data.$skip + data.$limit;
+	cache.skip = data.$skip || 0;
+	cache.next = data.$skip + data.$limit || data.$array.length;
 	cache.more = cache.next < data.$count;
 	table.data(_const.cache, cache);
 	$.each(data.$array, function(i) { // 通过数据产生缓存
