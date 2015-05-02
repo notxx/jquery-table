@@ -395,6 +395,9 @@ $.table.date_n_ip = function(row, extra) {
 			td.addClass("X-Real-IP").attr("title", value.IP).tooltip();
 		if (typeof value.date === "number") {
 			td.text(new Date(value.date).toLocaleDateString());
+		} else if (typeof value.$date === "number") {
+			var date = new Date(value.$date);
+			td.text(date.toLocaleDateString());
 		} else if (value.date && typeof value.date.date === "number") {
 			var date = new Date(value.date.date);
 			td.text(date.toLocaleDateString());
