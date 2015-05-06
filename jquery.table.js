@@ -409,5 +409,9 @@ $.table.date_n_ip = function(row, extra) {
 		return $("<td>").text("??");
 	}
 };
+$.table.moment = function(row, extra) {
+	var field = extra["data-property"], value = row[field];
+	return moment(value.$date).format("YYYY-MM-DD HH:mm");
+};
 
 })(jQuery);
