@@ -328,11 +328,9 @@ methods.draw = function table_draw(data) { // 将缓存绘制到表格
 		drawCache = drawCache.concat(this.rows);
 		index += this.rows.length;
 		if (drawCache.length >= MAX || i === cache.length - 1) { // 应输出
-			window.setTimeout(function(rows, start) {
-				$tbody.append(rows);
-				table.trigger(_events.draw);
-			}, 0, drawCache, index - drawCache.length);
+			$tbody.append(drawCache);
 			drawCache = [];
+			table.trigger(_events.draw);
 		}
 	});
 	table.trigger(_events.drawend);
@@ -400,7 +398,7 @@ var defaults = {
 	custom: { // 自定义生成单元格
 		"@index": function(row, extra, i) { return (i + 1); }
 	},
-	loading: $("<div class='loading'>").append("<div class='one'>").append("<div class='two'>").append("<div class='three'>"), // 载入中
+	loading: $("<div class='loading'>"),
 	autoMore: "scroll", // 自动载入更多
 	defaultClass: { // 默认CSS类
 		table: "ui-table table table-striped table-bordered table-hover table-condensed",
