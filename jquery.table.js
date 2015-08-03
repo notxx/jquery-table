@@ -1,4 +1,6 @@
 (function($) {
+if (!$) { return; }
+
 var _const = {
 	options: "table.options",
 	data: "table.data",
@@ -6,115 +8,120 @@ var _const = {
 };
 var _events = {
 	draw: "uitable-draw",
-	drawend: "uitable-drawend",
-	done: "done" // TODO
+	sort: "uitable-sort",
+	drawend: "uitable-drawend"
 };
 var methods = {};
 methods.init = function(options) { // 初始化
-	var table = this;
-	if (table.data(_const.options)) { return; }
-	if (typeof options === "object")
-		options = $.extend({}, defaults, options);
-	else
-		options = $.extend({}, defaults);
-	options.custom = $.extend({}, defaults.custom, options.custom);
-	options.sort = $.extend({}, defaults.sort, options.sort);
-	this.data(_const.options, options);
-
-	if (options.source === "virtual") { // 虚拟数据源，即手工敲入行
-	} else if (typeof options.source === "string") { // 数据源是字符串
-	} else if ($.isArray(options.source)) { // 数据源是数组
-	} else if ($.isFunction(options.source)) { // 数据源是函数
-	} else {
-		return false;
-	}
-
-	if (!options.rows) { // 没有指定行绘制方式就自动通过表格产生
-		var rows = options.rows = [];
-		table.find("thead tr").each(function(i) {
-			var columns = [], tr = $(this);
-			tr.children().each(function(j) {
-//				console.log(this);
-				var td = $(this);
-				if (!td.is("td") && !td.is("th")) { return; }
-				var prop = {}; // 复制单元格的一些属性
-				var pn = prop["data-property"] = td.attr("data-property");
-				prop.colspan = td.attr("colspan");
-				prop.rowspan = td.attr("rowspan");
-				prop.width = td.attr("width");
-				columns.push(prop);
-				if (options.sort[pn]) { // 产生排序按钮
-					var a = $("<a href='javascript:void(0)' class='sort'>"),
-						contents = td.contents(), icon = $("<span class='ui-icon ui-icon-triangle-2-n-s'>");
-					td.append(a.append(icon).append(contents));
-					a.data("icon", icon)
-					.data("sort", { field: pn, order: 0 })
-					.click(function() {
-						var a = $(this), sort = a.data("sort");
-						switch (sort.order) {
-						case 1:
-							sort.order = -1;
-							break;
-						case -1:
-							sort.order = 0;
-							break;
-						case 0:
-						default:
-							sort.order = 1;
-							break;
-						}
-						table.table("sort", sort);
-					});
+	this.each(function() { // 对每个表格分别初始化
+		var $table = $(this);
+		if ($table.data(_const.options)) { return; }
+		if (typeof options === "object")
+			options = $.extend({}, defaults, options);
+		else
+			options = $.extend({}, defaults);
+		options.custom = $.extend({}, defaults.custom, options.custom);
+		options.sort = $.extend({}, defaults.sort, options.sort);
+		$table.data(_const.options, options);
+	
+		if (options.source === "virtual") { // 虚拟数据源，即手工敲入行
+		} else if (typeof options.source === "string") { // 数据源是字符串
+		} else if ($.isArray(options.source)) { // 数据源是数组
+		} else if ($.isFunction(options.source)) { // 数据源是函数
+		} else {
+			return false;
+		}
+	
+		if (!options.rows) { // 没有指定行绘制方式就自动通过表格产生
+			var rows = options.rows = [];
+			$table.find("thead tr").each(function(i) {
+				var columns = [], tr = $(this);
+				tr.children().each(function(j) {
+	//				console.log(this);
+					var td = $(this);
+					if (!td.is("td") && !td.is("th")) { return; }
+					var prop = {}; // 复制单元格的一些属性
+					var pn = prop["data-property"] = td.attr("data-property");
+					prop.colspan = td.attr("colspan");
+					prop.rowspan = td.attr("rowspan");
+					prop.width = td.attr("width");
+					columns.push(prop);
+					if (options.sort[pn]) { // 产生排序按钮
+						var $a = $("<a href='javascript:void(0)' class='sort'>"),
+							contents = td.contents(),
+							icon = $("<span class='ui-icon ui-icon-triangle-2-n-s'>");
+						td.append($a.append(icon).append(contents));
+						$a.data("icon", icon)
+						.data("sort", { field: pn, order: 0 })
+						.click(function() {
+							var $a = $(this), sort = $a.data("sort");
+							switch (sort.order) {
+							case 1:
+								sort.order = -1;
+								break;
+							case -1:
+								sort.order = 0;
+								break;
+							case 0:
+							default:
+								sort.order = 1;
+								break;
+							}
+							$table.table("sort", sort);
+						});
+					}
+				});
+				rows.push(columns);
+			});
+		}
+	
+		$table
+		.table("link", _events.drawend, "done") // TODO
+		.table("link", _events.sort, "sort") // TODO
+		.addClass(options.defaultClass.table)
+		.on("sort", function(e, data) {
+			$table.find("a.sort").each(function() { // 维护排序图标
+				// TODO 1 放弃jquery-ui的图标，可以考虑使用bootstrap的图标字
+				// TODO 2 考虑transition展示图标从正序到逆序的效果
+				var $a = $(this), icon = $a.data("icon"), sort = $a.data("sort");
+				//console.log(data, $a.data("sort"));
+				if (data.field === sort.field) {
+					switch (data.order) {
+					case 1:
+						icon.attr("class", "ui-icon ui-icon-triangle-1-n");
+						break;
+					case -1:
+						icon.attr("class", "ui-icon ui-icon-triangle-1-s");
+						break;
+					case 0:
+					default:
+						icon.attr("class", "ui-icon ui-icon-triangle-2-n-s");
+						break;
+					}
+				} else {
+					sort.order = 0;
+					icon.attr("class", "ui-icon ui-icon-triangle-2-n-s");
 				}
 			});
-			rows.push(columns);
-		});
-	}
-
-	table.table("link", _events.drawend, _events.done).addClass("ui-table").on("sort", function(e, data) {
-		table.find("a.sort").each(function() {
-			var a = $(this), icon = a.data("icon"), sort = a.data("sort");
-			//console.log(data, a.data("sort"));
-			if (data.field === sort.field) {
-				switch (data.order) {
-				case 1:
-					icon.attr("class", "ui-icon ui-icon-triangle-1-n");
-					break;
-				case -1:
-					icon.attr("class", "ui-icon ui-icon-triangle-1-s");
-					break;
-				case 0:
-				default:
-					icon.attr("class", "ui-icon ui-icon-triangle-2-n-s");
-					break;
-				}
-			} else {
-				sort.order = 0;
-				icon.attr("class", "ui-icon ui-icon-triangle-2-n-s");
-			}
-		});
-	}).table("load");
+		}).table("load");
+	});
 };
-methods.options = function() { // 存取选项
+methods.options = function table_options() { // 存取选项
 	var table = this, options = table.data(_const.options);
-	if (arguments.length == 0) {
+	if (arguments.length == 0) { // 获取选项
 		return options;
-	} else if (arguments.length == 1 && $.isPlainObject(arguments[0])) {
+	} else if (arguments.length == 1 && $.isPlainObject(arguments[0])) { // 设置选项
 		options = $.extend({}, options, arguments[0]);
 		table.data(_const.options, options);
 		return this;
-	} else if (arguments.length == 2 && typeof arguments[0] === "string") {
-		var name = arguments[0], value = arguments[1];
-		if ($.isPlainObject(value)) {
-			value = $.extend({}, _eval(options, name), value);
-		}
-		with (options) {
-			eval("name=value");
-		}
+	} else if (arguments.length == 1 && typeof arguments[0] === "string") { // 获取一项选项
+		return _eval_get(options, arguments[0]);
+	} else if (arguments.length == 2 && typeof arguments[0] === "string") { // 设置一项选项
+		_eval_set(options, arguments[0], arguments[1]);
 		return this;
 	}
 }
-methods.link = function(event1, event2) { // link two events
+methods.link = function table_link(event1, event2) { // link two events
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
 	table.on(event1, function() {
@@ -124,7 +131,7 @@ methods.link = function(event1, event2) { // link two events
 	});
 	return this;
 }
-methods.load = function() { // 载入数据
+methods.load = function table_load() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
 	var data = $.isFunction(options.requestData)
@@ -150,39 +157,50 @@ methods.load = function() { // 载入数据
 	}
 	return this;
 };
-methods.more = function() { // 载入数据
+methods.more = function table_more() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
 	var data = $.isFunction(options.requestData)
 			? options.requestData({ skip: cache.next, limit: options.limit })
-			: options.requestData;
+			: options.requestData,
+		$more = table.find("caption.more");
 	if (options.source === "virtual") { // 虚拟数据源
 		throw new Error("invalid operation 'more()' on virtual mode")
+	} else if ($.isArray(options.source)) { // 数据源是数组
+		throw new Error("invalid operation 'more()' on static mode")
 	} else if (typeof options.source === "string") { // 数据源是字符串
 		if (cache.loading)
 			return this;
 		cache.loading = true;
-		var $more = table.find("caption.more");
 		if ($more.length)
 			$more.empty().append(options.loading);
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
 			data: data || { skip: cache.next, limit: options.limit }
-		}).done(function(data) {
+		}).done(function(responseData) {
 			cache.loading = false;
 			if ($.isFunction(options.responseData))
-				data = options.responseData(data);
-			table.table("consume", data);
+				responseData = options.responseData(responseData);
+			table.table("consume", responseData);
 		});
-	} else if ($.isArray(options.source)) { // 数据源是数组
-		throw new Error("invalid operation 'more()' on static mode")
 	} else if ($.isFunction(options.source)) { // 数据源是函数
-		table.table("consume", options.source(data));
+		if (cache.loading)
+			return this;
+		cache.loading = true;
+		if ($more.length)
+			$more.empty().append(options.loading);
+		window.setTimeout(function() {
+			cache.loading = false;
+			var responseData = options.source(data);
+			if ($.isFunction(options.responseData))
+				responseData = options.responseData(responseData);
+			table.table("consume", responseData);
+		}, 1500);
 	}
 	return this;
 };
-methods.consume = function(data) { // 将数据转化到缓存
+methods.consume = function table_consume(data) { // 将数据转化到缓存
 	var table = this, options = table.data(_const.options), 
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
 	if (!data) {
@@ -216,12 +234,12 @@ methods.consume = function(data) { // 将数据转化到缓存
 	var $more = table.find("caption.more");
 	if (cache.more) {
 		if (!$more.length) {
-			$more = $("<caption class='more' align='bottom'>").appendTo(table)
+			$more = $("<caption class='more' align='bottom'>").appendTo(table);
 		}
-		table.one(_events.done, function() {
+		table.one(_events.drawend, function() {
 			$("<a href='javascript:void(0)'>").appendTo($more.empty())
 			.text(cache.next + "/" + data.$count + " 载入更多")
-			.click(function load_more() { table.table("more"); });
+			.click(function table_more() { table.table("more"); });
 		});
 	} else {
 		$more.remove();
@@ -229,47 +247,54 @@ methods.consume = function(data) { // 将数据转化到缓存
 	table.table("draw");
 	return this;
 };
-methods.sort = function(sort) { // 排序缓存
+methods.sort = function table_sort(sort) { // 重新排序
 	var table = this, options = table.data(_const.options);
 	options.sorting = sort;
 	table.table("draw").trigger("sort", sort);
 };
-methods.rows = function(row, rowIndex) { // 绘制一行
+methods.rows = function table_rows(row, rowIndex) { // 绘制一行
 	var table = this, options = table.data(_const.options), result = [];
 	$.each(options.rows, function() {
 		var _row = this,
-			tr = $.isFunction(options.tr) ? options.tr(row) 
-				: $("<tr>").addClass("ui-state-default");
+			$tr = ($.isFunction(options.tr) ? options.tr(row) 
+				: $("<tr>")).addClass(options.defaultClass.row),
+			cells = [];
 		$(_row).each(function () {
-			var _column = this["data-property"], extra = $.extend({}, this);
+			var _column = this["data-property"], extra = $.extend({}, this), $td;
 			var val;
-			if ($.isFunction(options.custom[_column])) {
-				val = options.custom[_column].apply(tr, [ row, extra, rowIndex ]);
-			} else {
-				val = _eval(row, _column);
+			if ($.isFunction(options.custom[_column])) { // 自定义单元格生成者
+				val = options.custom[_column].apply($tr, [ row, extra, rowIndex ]);
 			}
-			if (!val) { // 没有值
-				$("<td>", extra).addClass(_column).text("").appendTo(tr);
-			} else if (!$.isFunction(val.is)) { // 基本值
-				$("<td>", extra).addClass(_column).text(val.toString()).appendTo(tr);
-			} else if (val.is("td")) { // 直接产生单元格
-				tr.append(val.addClass(_column))
-			} else { // 其他
-				$("<td>", extra).addClass(_column).append(val).appendTo(tr);
+			else {
+				val = _eval_get(row, _column);
 			}
+			if (typeof val !== "number" && !val) { // 没有值
+				$td = $("<td>", extra).addClass(_column).text("");
+			}
+			else if (!$.isFunction(val.is)) { // 基本值
+				$td = $("<td>", extra).addClass(_column).text(val.toString());
+			}
+			else if (val.is("td")) { // 直接产生单元格
+				$td = val.addClass(_column);
+			}
+			else { // 其他
+				$td = $("<td>", extra).addClass(_column).append(val);
+			}
+			cells.push($td);
 		});
-		result.push(tr);
+		$tr.append(cells);
+		result.push($tr);
 	});
 	return result;
 }
-methods.insert = function(row, rowIndex) { // 插入一行到表格，仅可在虚拟数据源下使用
+methods.insert = function table_insert(row, rowIndex) { // 插入一行到表格，仅可在虚拟数据源下使用
 	var table = this, options = table.data(_const.options), 
 		tbody = table.find("tbody");
 	if (options.source !== "virtual") { throw new Error("options.source !== 'virtual'") }
 	var rows = table.table("rows", row, rowIndex);
 	tbody.append.apply(tbody, rows);
 }
-methods.draw = function(data) { // 将缓存绘制到表格
+methods.draw = function table_draw(data) { // 将缓存绘制到表格
 	var table = this, $tbody = table.find("tbody"),
 		timestamp = $tbody.data("timestamp"),
 		options = table.data(_const.options),
@@ -279,43 +304,34 @@ methods.draw = function(data) { // 将缓存绘制到表格
 	if (!cache) { // 缓存不存在
 		throw new Error("no cache");
 	}
-	toDraw = options.sorting ?
-		_sort(cache.slice(), options.sorting.field, options.sorting.order, options) : cache;
+	toDraw = cache.slice();
+	if (options.sorting) {
+		_sort(toDraw, options.sorting.field, options.sorting.order, options);
+	}
 	var drawCache = [], MAX = 50, index = 0;
 	$.each(toDraw, function(i) {
-		var filtered = $.isFunction(options.filter) ? options.filter(this.data) : true,
-			active = $.isFunction(options.active) ? options.active(this.data) : false,
-			highlight = $.isFunction(options.highlight) ? options.highlight(this.data) : false;
-		$.each(this.rows, function() {
-			var $this = $(this).css("display", filtered ? "" : "none");
-			if (active)
-				$this.addClass("ui-state-active");
-			else
-				$this.removeClass("ui-state-active");
-			if (highlight)
-				$this.addClass("ui-state-highlight");
-			else
-				$this.removeClass("ui-state-highlight");
-		});
+		var $row = this.rows[0], $old = $tbody.children("tr");
+		if ($old.length && $old[index] === $row[0]) {
+			return index += this.rows.length;
+		}
+		var filter = $.isFunction(options.filter),
+			hasRowClass = $.isFunction(options.rowClass);
+		if (filter || hasRowClass) { // 应用选项中的动态过滤/动态类
+			var filtered = filter ? options.filter(this.data) : true,
+				rowClass = hasRowClass ? options.rowClass(this.data) : false;
+			$.each(this.rows, function() {
+				var $row = $(this).css("display", filtered ? "" : "none");
+				if (rowClass) { $row.attr("class", rowClass); }
+				$row.addClass(options.defaultClass.row);
+			});
+		}
 		drawCache = drawCache.concat(this.rows);
 		index += this.rows.length;
 		if (drawCache.length >= MAX || i === cache.length - 1) { // 应输出
 			window.setTimeout(function(rows, start) {
-				if (!timestamp || timestamp !== cache.lastModified || !$tbody.children("tr").length) { // 不是排序，直接添加
-					$tbody.data("timestamp", cache.lastModified);
-					$.each(rows, function() { $tbody.append(this); });
-				} else { // 替换
-					$.each(rows, function(j) {
-						var $old = $($tbody.children("tr")[start + j]);
-						if (!$old.length) {
-							$tbody.append(this);
-						} else if ($old[0] != this[0]) {
-							$old.replaceWith(this);
-						}
-					});
-				}
+				$tbody.append(rows);
 				table.trigger(_events.draw);
-			}, 10, drawCache, index - drawCache.length);
+			}, 0, drawCache, index - drawCache.length);
 			drawCache = [];
 		}
 	});
@@ -327,12 +343,46 @@ methods.draw = function(data) { // 将缓存绘制到表格
 	return this;
 };
 
-function _eval(context, expr) { // 对表达式求值
-	with (context) {
-		try {
-			return eval("(" + expr + ")");
-		} catch (e) {}
+function _try() {
+	var args = Array.prototype.slice.apply(arguments), // 复制参数
+		func = args.shift(); // 抽掉第一个参数
+	try {
+		return func.apply(this, args);
+	} catch (e) {}
+}
+var _eval_get_cache = {}; // 表达式缓存
+function _eval_get(context, expr) { // 对表达式求值
+	var _cache = _eval_get_cache;
+	if (_cache[expr]) { return _try.apply(context, [ _cache[expr] ]); }
+	var func, index = expr.indexOf(".");
+	if (index == 0) { // 点（.）开头的表达式
+		func = new Function("return this" + expr);
 	}
+	else if (index > 0) { // 含有点（.）的表达式
+		func = new Function("return this." + expr);
+	}
+	else { // 其他表达式
+		func = function() { return this[expr]; }
+	}
+	_cache[expr] = func; // 缓存函数
+	return _try.apply(context, [ func ]);
+}
+var _eval_set_cache = {}; // 表达式缓存
+function _eval_set(context, expr, value) { // 对表达式求值
+	var _cache = _eval_set_cache;
+	if (_cache[expr]) { return _try.apply(context, [ _cache[expr], value ]); }
+	var func, index = expr.indexOf(".");
+	if (index == 0) { // 点（.）开头的表达式
+		func = new Function("value", "this" + expr + " = value");
+	}
+	else if (index > 0) { // 含有点（.）的表达式
+		func = new Function("value", "this." + expr + " = value");
+	}
+	else { // 其他表达式
+		func = function(value) { return this[expr] = value; }
+	}
+	_cache[expr] = func; // 缓存函数
+	return _try.apply(context, [ func, value ]);
 }
 function _sort(cache, field, order, options) { // 对缓存排序
 	var func = options.sort[options.sorting.field]
@@ -345,17 +395,22 @@ function _sort(cache, field, order, options) { // 对缓存排序
 }
 
 var defaults = {
-	limit: 20,
-	custom: {
-		"@index": function(row, extra, i) { return (this.hasClass("ui-state-active")) ? ">" : (i + 1); }
+	limit: 20, // 分页
+	localSort: true, // 本地排序
+	custom: { // 自定义生成单元格
+		"@index": function(row, extra, i) { return (i + 1); }
 	},
-	loading: $("<div class='loading'>").append("<div class='one'>").append("<div class='two'>").append("<div class='three'>"),
-	autoMore: "scroll",
-	defaultSort: function(cache, field, order) {
+	loading: $("<div class='loading'>").append("<div class='one'>").append("<div class='two'>").append("<div class='three'>"), // 载入中
+	autoMore: "scroll", // 自动载入更多
+	defaultClass: { // 默认CSS类
+		table: "ui-table table table-striped table-bordered table-hover table-condensed",
+		row: ""
+	},
+	defaultSort: function table_sort(cache, field, order) { // 排序函数
 		return !!order ? cache.sort(function(a, b) {
-			var _a = _eval(a.data, field), _b = _eval(b.data, field);
-			if (typeof _a === "undefined" || typeof _a === "null") { _a = ""; } // "" 可以排序
-			if (typeof _b === "undefined" || typeof _b === "null") { _b = ""; } // "" 可以排序
+			var _a = _eval_get(a.data, field), _b = _eval_get(b.data, field);
+			if (typeof _a === "undefined" || _a === "null") { _a = ""; } // "" 可以排序
+			if (typeof _b === "undefined" || _b === "null") { _b = ""; } // "" 可以排序
 			if ($.isNumeric(_a) && $.isNumeric(_b)) // 进行数值比较
 				return (_a - _b) * order;
 			else if (String.prototype.localeCompare) // 进行本地化字符串比较
@@ -387,29 +442,51 @@ $.fn.table = function(method) {
 };
 
 $.table = {};
-$.table.date_n_ip = function(row, extra) {
+$.table.date = function(row, extra) { // 输出日期
 	var field = extra["data-property"], value = row[field];
-	if (value) { // date & IP
-		var td = $("<td>");
-		if (value.IP)
-			td.addClass("X-Real-IP").attr("title", value.IP).tooltip();
+	if (value) { // date
+		var $td = $("<td>"), date = null;
 		if (typeof value.date === "number") {
-			td.text(new Date(value.date).toLocaleDateString());
+			date = new Date(value.date);
 		} else if (typeof value.$date === "number") {
-			var date = new Date(value.$date);
-			td.text(date.toLocaleDateString());
+			date = new Date(value.$date);
 		} else if (value.date && typeof value.date.date === "number") {
-			var date = new Date(value.date.date);
-			td.text(date.toLocaleDateString());
-		} else {
-			td.text("??");
+			date = new Date(value.date.date);
 		}
-		return td;
+		if (date) {
+			$td.text(date.toLocaleDateString());
+		} else {
+			$td.text("??");
+		}
+		return $td;
 	} else {
 		return $("<td>").text("??");
 	}
 };
-$.table.moment = function(row, extra) {
+$.table.date_n_ip = function(row, extra) { // 输出日期和IP
+	var field = extra["data-property"], value = row[field];
+	if (value) { // date & IP
+		var $td = $("<td>"), date = null;
+		if (value.IP)
+			$td.addClass("X-Real-IP").attr("title", value.IP).tooltip();
+		if (typeof value.date === "number") {
+			date = new Date(value.date);
+		} else if (typeof value.$date === "number") {
+			date = new Date(value.$date);
+		} else if (value.date && typeof value.date.date === "number") {
+			date = new Date(value.date.date);
+		}
+		if (date) {
+			$td.text(date.toLocaleDateString());
+		} else {
+			$td.text("??");
+		}
+		return $td;
+	} else {
+		return $("<td>").text("??");
+	}
+};
+$.table.moment = function(row, extra) { // 以moment()的方式输出日期
 	var field = extra["data-property"], value = row[field];
 	return moment(value.$date).format("YYYY-MM-DD HH:mm");
 };
