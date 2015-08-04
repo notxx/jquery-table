@@ -1,13 +1,21 @@
 @charset "utf-8";
 
 table.ui-table { table-layout: fixed; }
-table.ui-table tr { -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none; -o-user-select: none; }
+/* 标题栏 */
 table.ui-table thead { }
-table.ui-table thead tr td { font-weight: bolder; font-size: larger; text-align: center; }
+table.ui-table thead > tr { -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none; -o-user-select: none; user-select: none; }
+table.ui-table thead > tr > td { font-weight: bolder; font-size: larger; text-align: center; }
+table.ui-table thead > tr > td > a.sort { font-size: 1em; vertical-align: inherit; }
+table.ui-table thead > tr > td > a.sort:active, table.ui-table thead > tr > td > a.sort:focus, table.ui-table thead > tr > td > a.sort:hover { outline: none; text-decoration: inherti; }
+table.ui-table thead > tr > td > a.sort:before { content: "\e250"; display: inline-block; font-family: 'Glyphicons Halflings'; font-size: 12px; font-style: normal; font-weight: 400; line-height: 1; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+/*table.ui-table thead > tr > td > a.sort:before { content: " "; display: inline-block; width: .6em; height: .6em; border: .3em dashed transparent; border-left-color: currentColor; }*/
+table.ui-table thead > tr > td > a.sort:before { -webkit-transition: all .3s ease-in-out; -ms-transition: all .3s ease-in-out; transition: all .3s ease-in-out; }
+table.ui-table thead > tr > td > a.sort.sort-asc:before { transform: rotate(90deg); }
+table.ui-table thead > tr > td > a.sort.sort-desc:before { transform: rotate(-90deg); }
+/* 内容 */
 table.ui-table tbody { }
-table.ui-table tbody tr { }
-table.ui-table tbody tr td { padding: 0.4em; overflow: hidden; text-overflow: ellipsis; }
-table.ui-table tbody tr.ui-state-active td { font-weight: bolder; font-size: larger;  }
+table.ui-table tbody > tr { -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none; -o-user-select: none; user-select: none; }
+table.ui-table tbody > tr > td { padding: 0.4em; overflow: hidden; text-overflow: ellipsis; }
 
 /* loading thx to https://github.com/tobiasahlin/SpinKit */
 table.ui-table caption.more { margin: .4em auto; text-align: center; height: 1em; }

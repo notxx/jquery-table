@@ -38,20 +38,18 @@ methods.init = function(options) { // 初始化
 				var columns = [], tr = $(this);
 				tr.children().each(function(j) {
 	//				console.log(this);
-					var td = $(this);
-					if (!td.is("td") && !td.is("th")) { return; }
+					var $td = $(this);
+					if (!$td.is("td") && !$td.is("th")) { return; }
 					var prop = {}; // 复制单元格的一些属性
-					var pn = prop["data-property"] = td.attr("data-property");
-					prop.colspan = td.attr("colspan");
-					prop.rowspan = td.attr("rowspan");
-					prop.width = td.attr("width");
+					var pn = prop["data-property"] = $td.attr("data-property");
+					prop.colspan = $td.attr("colspan");
+					prop.rowspan = $td.attr("rowspan");
+					prop.width = $td.attr("width");
 					columns.push(prop);
 					if (options.sort[pn]) { // 产生排序按钮
 						var $a = $("<a href='javascript:void(0)' class='sort'>"),
-							contents = td.contents(),
-							icon = $("<span class='ui-icon ui-icon-triangle-2-n-s'>");
-						td.append($a.append(icon).append(contents));
-						$a.data("icon", icon)
+							contents = $td.contents();
+						$a.append(contents).appendTo($td)
 						.data("sort", { field: pn, order: 0 })
 						.click(function() {
 							var $a = $(this), sort = $a.data("sort");
@@ -83,24 +81,24 @@ methods.init = function(options) { // 初始化
 			$table.find("a.sort").each(function() { // 维护排序图标
 				// TODO 1 放弃jquery-ui的图标，可以考虑使用bootstrap的图标字
 				// TODO 2 考虑transition展示图标从正序到逆序的效果
-				var $a = $(this), icon = $a.data("icon"), sort = $a.data("sort");
+				var $a = $(this), sort = $a.data("sort");
 				//console.log(data, $a.data("sort"));
 				if (data.field === sort.field) {
 					switch (data.order) {
 					case 1:
-						icon.attr("class", "ui-icon ui-icon-triangle-1-n");
+						$a.attr("class", "sort sort-asc");
 						break;
 					case -1:
-						icon.attr("class", "ui-icon ui-icon-triangle-1-s");
+						$a.attr("class", "sort sort-desc");
 						break;
 					case 0:
 					default:
-						icon.attr("class", "ui-icon ui-icon-triangle-2-n-s");
+						$a.attr("class", "sort");
 						break;
 					}
 				} else {
 					sort.order = 0;
-					icon.attr("class", "ui-icon ui-icon-triangle-2-n-s");
+					$a.attr("class", "sort");
 				}
 			});
 		}).table("load");
@@ -308,12 +306,13 @@ methods.draw = function table_draw(data) { // 将缓存绘制到表格
 	if (options.sorting) {
 		_sort(toDraw, options.sorting.field, options.sorting.order, options);
 	}
-	var drawCache = [], MAX = 50, index = 0;
+	var drawCache = [], MAX = 50, index = 0, intact = true;
 	$.each(toDraw, function(i) {
 		var $row = this.rows[0], $old = $tbody.children("tr");
-		if ($old.length && $old[index] === $row[0]) {
+		if (intact && $old.length && $old[index] === $row[0]) {
 			return index += this.rows.length;
 		}
+		intact = false;
 		var filter = $.isFunction(options.filter),
 			hasRowClass = $.isFunction(options.rowClass);
 		if (filter || hasRowClass) { // 应用选项中的动态过滤/动态类
