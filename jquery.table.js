@@ -483,9 +483,55 @@ $.table.date_n_ip = function(row, extra) { // 输出日期和IP
 		return $("<td>").text("??");
 	}
 };
-$.table.moment = function(row, extra) { // 以moment()的方式输出日期
-	var field = extra["data-property"], value = row[field];
-	return moment(value.$date).format("YYYY-MM-DD HH:mm");
+$.table.moment_v2 = function(format) { // 以moment()的方式输出日期
+	return (function(row, extra) {
+		if (!$.isFunction(moment)) { return; }
+		var field = extra["data-property"], value = row[field];
+		return moment(value.$date).format(format);
+	});
+};
+$.table.moment = $.table.moment_v2("YYYY-MM-DD HH:mm");
+$.table.hover = function(options) { // 鼠标悬停显示按钮
+	return (function(row, extra) {
+		var $td = $('<td class="need-hover">'),
+			$group = $('<div class="hover">').appendTo($td),
+			$text = $('<font class="text">').appendTo($td);
+		
+		if (options.group)
+			$group.addClass("btn-group");
+		if ($.isFunction(options.text))
+			$text.text(options.text(row, extra));
+		else if (options.text)
+			$text.text(options.text);
+		else if (options.textField)
+			$text.text(row[options.textField]);
+		
+		$.each(options.buttons || [], function(i, button) {
+			var $btn = $('<button class="btn btn-xs">', button.extra || {}).text(button.text).appendTo($group);
+			if (button.class) { $btn.addClass(button.class); }
+			if ($.isFunction(button.click))
+				$btn.click(function(e) { button.click(e, row, extra); });
+		});
+		
+		var tid;
+		$td.hover(function() {
+			if (tid) window.clearTimeout(tid);
+			$td.addClass("hover");
+		}, function() {
+			if (!$group.hasClass("open")) { return $td.removeClass("hover"); }
+			tid = window.setTimeout(function() { // 菜单已打开则延时关闭
+				$group.removeClass("open");
+				$td.removeClass("hover");
+			}, 500);
+		});
+		return $td;
+	});
+};
+$.table.enum = function(options) { // 枚举显示
+	return (function(row, extra) {
+		var val = row[extra["data-property"]];
+		return options[val] || ("??" + val + "??");
+	});
 };
 
 })(jQuery);

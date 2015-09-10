@@ -2,15 +2,16 @@
 <html>
 <head>
 	<meta charset="utf-8" />
-	<link rel="stylesheet" href="/jquery.table.css" />
-	<link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.css"
+	<link rel="stylesheet" href="jquery.table.css" />
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
 	<style>
 	</style>
 	<title>jQuery.table test drive</title>
 </head>
 <body>
 	<h3>jQuery.table test drive</h3>
-	<script src="/bower_components/jquery/dist/jquery.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.min.js"></script>
 	<script defer="defer" src="jquery.table.js"></script>
 	<div class="container">
 		<ol>
@@ -41,6 +42,15 @@ $(".table.table-1").table({
 	source: data,
 	custom: {
 		input: $.table.date_n_ip,
+		name: $.table.hover({
+			textField: "name",
+			group: true,
+			buttons: [
+				{ class: "btn-danger", text: "禁用", click: console.log.bind(console) },
+				{ class: "btn-success", text: "启用", click: console.log.bind(console) },
+				{ class: "btn-info", text: "删除", click: console.log.bind(console) },
+			]
+		}),
 		item: function(row) {
 			var ul = $("<ul>");
 			$(row.item).each(function() {
@@ -48,7 +58,7 @@ $(".table.table-1").table({
 			});
 			return ul;
 		},
-		description: function(row) { return $("<td>").html(row.description); }
+		description: $.table.enum({ "呵呵": "嘿嘿", "呵呵呵": "哈哈" })
 	}
 });
 });
