@@ -43,7 +43,7 @@ $(".table.table-1").table({
 	custom: {
 		input: $.table.date_n_ip,
 		name: $.table.hover({
-			textField: "name",
+			field: "name",
 			group: true,
 			buttons: [
 				{ class: "btn-danger", text: "禁用", click: console.log.bind(console) },
@@ -93,6 +93,15 @@ $(".table.table-2").table({
 	},
 	custom: {
 		input: $.table.date_n_ip,
+		name: $.table.hover({
+			content: function(row) { return $('<p>').text(row.name); },
+			group: false,
+			buttons: [
+				{ class: "btn-danger", text: "禁用", href: function(row) { return row.name; } },
+				{ class: "btn-success", text: "启用", click: console.log.bind(console) },
+				{ class: "btn-info", text: "删除", click: console.log.bind(console) },
+			]
+		}),
 		item: function(row) {
 			var ul = $("<ul>");
 			$(row.item).each(function() {

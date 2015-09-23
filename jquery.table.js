@@ -23,7 +23,7 @@ methods.init = function(options) { // 初始化
 		options.custom = $.extend({}, defaults.custom, options.custom);
 		options.sort = $.extend({}, defaults.sort, options.sort);
 		$table.data(_const.options, options);
-	
+
 		if (options.source === "virtual") { // 虚拟数据源，即手工敲入行
 		} else if (typeof options.source === "string") { // 数据源是字符串
 		} else if ($.isArray(options.source)) { // 数据源是数组
@@ -31,7 +31,7 @@ methods.init = function(options) { // 初始化
 		} else {
 			return false;
 		}
-	
+
 		if (!options.rows) { // 没有指定行绘制方式就自动通过表格产生
 			var rows = options.rows = [];
 			$table.find("thead tr").each(function(i) {
@@ -72,7 +72,7 @@ methods.init = function(options) { // 初始化
 				rows.push(columns);
 			});
 		}
-	
+
 		$table
 		.table("link", _events.drawend, "done") // TODO
 		.table("link", _events.sort, "sort") // TODO
@@ -215,7 +215,7 @@ methods.consume = function table_consume(data) { // 将数据转化到缓存
 	} else {
 		throw new Error("invalid data");
 	}
-	
+
 	if (data.$skip == 0 || !cache) { // 初始化缓存，清空表格
 		tbody = tbody.empty();
 		cache = [];
@@ -496,23 +496,32 @@ $.table.hover = function(options) { // 鼠标悬停显示按钮
 		var $td = $('<td class="need-hover">'),
 			$group = $('<div class="hover">').appendTo($td),
 			$text = $('<font class="text">').appendTo($td);
-		
+
 		if (options.group)
 			$group.addClass("btn-group");
-		if ($.isFunction(options.text))
+		if ($.isFunction(options.content))
+			$text.append(options.content(row, extra));
+		else if ($.isFunction(options.text))
 			$text.text(options.text(row, extra));
 		else if (options.text)
 			$text.text(options.text);
-		else if (options.textField)
-			$text.text(row[options.textField]);
-		
+		else if (options.field)
+			$text.text(row[options.field]);
+		else
+			$text.text(row[extra["data-property"]]);
+
 		$.each(options.buttons || [], function(i, button) {
-			var $btn = $('<button class="btn btn-xs">', button.extra || {}).text(button.text).appendTo($group);
+			var $btn = $('<a class="btn btn-xs">', button.extra || {}).text(button.text).appendTo($group);
+			if ($.isFunction(button.href)) {
+				$btn.attr("href", button.href(row, extra));
+			} else if (button.href) {
+				$btn.attr("href", button.href);
+			} else if ($.isFunction(button.click)) {
+				$btn.attr("href", "javascript:void(0)").click(function(e) { button.click(e, row, extra); });
+			}
 			if (button.class) { $btn.addClass(button.class); }
-			if ($.isFunction(button.click))
-				$btn.click(function(e) { button.click(e, row, extra); });
 		});
-		
+
 		var tid;
 		$td.hover(function() {
 			if (tid) window.clearTimeout(tid);
