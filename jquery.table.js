@@ -133,7 +133,7 @@ methods.load = function table_load() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
 	var data = $.isFunction(options.requestData)
-			? options.requestData({ skip: 0, limit: options.limit })
+			? options.requestData({ $skip: 0, $limit: options.limit })
 			: options.requestData;
 	table.data(_const.cache, null);
 	if (options.source === "virtual") { // 虚拟数据源
@@ -142,7 +142,7 @@ methods.load = function table_load() { // 载入数据
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
-			data: data || { skip: 0, limit: options.limit }
+			data: data || { $skip: 0, $limit: options.limit }
 		}).done(function(data) {
 			if ($.isFunction(options.responseData))
 				data = options.responseData(data);
@@ -159,7 +159,7 @@ methods.more = function table_more() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
 	var data = $.isFunction(options.requestData)
-			? options.requestData({ skip: cache.next, limit: options.limit })
+			? options.requestData({ $skip: cache.next, $limit: options.limit })
 			: options.requestData,
 		$more = table.find("caption.more");
 	if (options.source === "virtual") { // 虚拟数据源
@@ -175,7 +175,7 @@ methods.more = function table_more() { // 载入数据
 		$.ajax(options.source, {
 			method : options.requestMethod || "post",
 			dataType: options.requestDataType || "json",
-			data: data || { skip: cache.next, limit: options.limit }
+			data: data || { $skip: cache.next, $limit: options.limit }
 		}).done(function(responseData) {
 			cache.loading = false;
 			if ($.isFunction(options.responseData))
@@ -492,34 +492,46 @@ $.table.moment_v2 = function(format) { // 以moment()的方式输出日期
 };
 $.table.moment = $.table.moment_v2("YYYY-MM-DD HH:mm");
 $.table.hover = function(options) { // 鼠标悬停显示按钮
-	return (function(row, extra) {
+	return (function(row, extras) {
 		var $td = $('<td class="need-hover">'),
 			$group = $('<div class="hover">').appendTo($td),
 			$text = $('<font class="text">').appendTo($td);
 
-		if (options.group)
-			$group.addClass("btn-group");
-		if ($.isFunction(options.content))
-			$text.append(options.content(row, extra));
-		else if ($.isFunction(options.text))
-			$text.text(options.text(row, extra));
-		else if (options.text)
-			$text.text(options.text);
-		else if (options.field)
-			$text.text(row[options.field]);
-		else
-			$text.text(row[extra["data-property"]]);
+		// 单元格内容
+		var field = options.field || extras["data-property"],
+			text = $.isFunction(options.text) ? options.text(row, extras) : options.text;
+		if ($.isFunction(options.content)) {
+			$text.append(options.content(row, extras));
+		} else if (text) {
+			$text.text(text);
+		} else {
+			val = _eval_get(row, field);
+			$text.text(val);
+		}
 
-		$.each(options.buttons || [], function(i, button) {
-			var $btn = $('<a class="btn btn-xs">', button.extra || {}).text(button.text).appendTo($group);
+		// 按钮分组
+		var group = $.isFunction(options.group) ? options.group(row, extras) : options.group;
+		if (group) { $group.addClass("btn-group"); }
+		// 按钮内容
+		var buttons = $.isFunction(options.buttons) ? options.buttons(row, extras) : options.buttons;
+		$.each(buttons || [], function(i, button) {
+			var $btn = $('<a class="btn btn-xs">', button.extras || {}).appendTo($group),
+				content = $.isFunction(button.content) ? button.content(row, extras) : button.content,
+				text = $.isFunction(button.text) ? button.text(row, extras) : button.text;
+			if (content) {
+				$btn.append(content);
+			} else {
+				$btn.text(text);
+			}
 			if ($.isFunction(button.href)) {
-				$btn.attr("href", button.href(row, extra));
+				$btn.attr("href", button.href(row, extras));
 			} else if (button.href) {
 				$btn.attr("href", button.href);
 			} else if ($.isFunction(button.click)) {
-				$btn.attr("href", "javascript:void(0)").click(function(e) { button.click(e, row, extra); });
+				$btn.attr("href", "javascript:void(0)").click(function(e) { button.click(e, row, extras); });
 			}
-			if (button.class) { $btn.addClass(button.class); }
+			var clazz = $.isFunction(button.class) ? button.class(i, button, row, extras) : button.class;
+			if (clazz) { $btn.addClass(clazz); }
 		});
 
 		var tid;
@@ -539,7 +551,7 @@ $.table.hover = function(options) { // 鼠标悬停显示按钮
 $.table.enum = function(options) { // 枚举显示
 	return (function(row, extra) {
 		var val = row[extra["data-property"]];
-		return options[val] || ("??" + val + "??");
+		return typeof(options[val]) === "string" ? options[val] : ("??" + val + "??");
 	});
 };
 

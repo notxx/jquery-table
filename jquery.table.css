@@ -42,9 +42,9 @@ div.loading:after { background-color: blue;  }
 table.ui-table td.need-hover { position: relative; }
 table.ui-table td.need-hover.hover { overflow: visible; }
 table.ui-table td.need-hover > .hover, table.ui-table td.need-hover > .text { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-table.ui-table td.need-hover > .hover { padding: .3em; }
-table.ui-table td.need-hover > .text { padding: .4em; }
-table.ui-table td.need-hover > .hover, table.ui-table td.need-hover.hover > .text { visibility: hidden; }
+table.ui-table td.need-hover > .hover { padding: .3em; z-index: 1; }
+table.ui-table td.need-hover > .text { padding: .4em; z-index: 0; }
+table.ui-table td.need-hover > .hover { visibility: hidden; }
 table.ui-table td.need-hover.hover > .hover, table.ui-table td.need-hover > .text { visibility: visible; }
 table.ui-table td.need-hover > .hover > .btn { margin-right: .6em; }
 table.ui-table td.need-hover > .hover.btn-group > .btn { margin-right: 0; }
