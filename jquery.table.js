@@ -554,5 +554,35 @@ $.table.enum = function(options) { // 枚举显示
 		return typeof(options[val]) === "string" ? options[val] : ("??" + val + "??");
 	});
 };
+$.table.overflow = function(options) { // 鼠标悬停显示溢出
+	options = options || {};
+	return (function(row, extras) {
+		var $td = $('<td class="overflow">'),
+			$text = $('<div class="text">').appendTo($td);
+
+		// 单元格内容
+		var field = options.field || extras["data-property"],
+			text = $.isFunction(options.text) ? options.text(row, extras) : options.text;
+		if ($.isFunction(options.content)) {
+			$text.append(options.content(row, extras));
+		} else if (text) {
+			$text.text(text);
+		} else {
+			val = _eval_get(row, field);
+			$text.text(val);
+		}
+
+		$td.hover(function() {
+			$text.addClass("hover");
+			if ($td.hasClass("overflowed")) return;
+			var w0 = $td.width(),
+				w1 = $text.width();
+			if (w0 < w1) $td.addClass("overflowed");
+		}, function() {
+			$text.removeClass("hover");
+		});
+		return $td;
+	});
+};
 
 })(jQuery);
