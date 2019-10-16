@@ -2,7 +2,6 @@
 
 table.ui-table { table-layout: fixed; }
 /* 标题栏 */
-table.ui-table thead { }
 table.ui-table thead > tr { -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none; -o-user-select: none; user-select: none; }
 table.ui-table thead > tr > td { font-weight: bolder; font-size: larger; text-align: center; }
 table.ui-table thead > tr > td > a.sort { font-size: 1em; vertical-align: inherit; }
@@ -13,7 +12,6 @@ table.ui-table thead > tr > td > a.sort:before { -webkit-transition: all .3s eas
 table.ui-table thead > tr > td > a.sort.sort-asc:before { transform: rotate(90deg); }
 table.ui-table thead > tr > td > a.sort.sort-desc:before { transform: rotate(-90deg); }
 /* 内容 */
-table.ui-table tbody { }
 table.ui-table tbody > tr { -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none; -o-user-select: none; user-select: none; }
 table.ui-table tbody > tr > td { padding: 0.4em; overflow: hidden; text-overflow: ellipsis; }
 
@@ -54,9 +52,9 @@ table.ui-table .ui-icon { display: inline-block; }
 table.ui-table.embed { width: 100%; margin: 0.1em auto; }
 
 /* overflow text */
-table.ui-table td.overflow { position: relative; padding: 0; cursor: default; }
+table.ui-table td.overflow { position: relative; padding: .4em; cursor: default; }
 table.ui-table td.overflow.overflowed { overflow: visible; }
-table.ui-table td.overflow div.text { width: 100%; padding: .4em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-table.ui-table td.overflow div.text.hover { position: absolute; width: auto; background: #f5f5f5; }
-table.ui-table td.overflow.overflowed div.text.hover { background: white; border: 1px solid #66afe9; left: -1px; top: -1px; bottom: -1px; -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6); box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6); }
+table.ui-table td.overflow > .text { width: 100%; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.ui-table td.overflow > .text.hover { position: absolute; width: auto; padding: 0; background: #f5f5f5; }
+table.ui-table td.overflow.overflowed > .text.hover { background: white; border: 1px solid #66afe9; left: -1px; top: -1px; bottom: -1px; padding: .4em; -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6); box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6); }
 

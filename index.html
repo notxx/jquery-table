@@ -3,20 +3,60 @@
 <head>
 	<meta charset="utf-8" />
 	<link rel="stylesheet" href="jquery.table.css" />
-	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
 	<style>
 	</style>
 	<title>jQuery.table test drive</title>
 </head>
 <body>
 	<h3>jQuery.table test drive</h3>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.min.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.min.js"></script>
 	<script defer="defer" src="jquery.table.js"></script>
 	<div class="container">
 		<ol>
+			<li>超长文字自动溢出(<code>$.table.overflow("")</code>)
+				<table class="table table-4">
+		<thead>
+			<tr>
+				<td data-property="@index" style="width: 1em;"></td>
+				<td data-property="name" style="width: 4em;">名称</td>
+				<td data-property="input" style="width: 8em;">日期</td>
+				<td data-property="item" style="width: 15em;">货品</td>
+				<td data-property="description">描述</td>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+			</li>
+	<script defer="defer">
+$(function () {
+var data = [
+{"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "2014年6月15日 下午5:00:39 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "马丁"}],"url": "https://www.neurun.com/doctors_office/input_task.html","description": "呵呵","input": {"date": {"date": 1402822911681}}},
+{"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "2014年6月20日 下午8:00:39 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "马丁"}],"url": "https://www.neurun.com/doctors_office/input_task.html","description": "呵呵呵","input": {"date": {"date": 1402822911681}}},
+{"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "2014年6月15日 下午5:00:39 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "马丁"}],"url": "https://www.neurun.com/doctors_office/input_task.html","description": "呵呵呵","input": {"date": {"date": 1402822911681}}},
+{"_id": {"oid": "53a9999a4ca4582000000000"},"name": "2014年6月24日 下午11:30:12 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "外星人 4710 860"}],"url": "http://google.com","description": "呵呵","input": {"date": {"date": 1403623834514}}}
+];
+$(".table.table-4").table({
+	source: data,
+	custom: {
+		input: $.table.date_n_ip,
+		name: $.table.overflow("name"),
+		item: function(row) {
+			var ul = $("<ul>");
+			$(row.item).each(function() {
+				ul.append($("<li>").text(this.name));
+			});
+			return ul;
+		},
+		description: $.table.enum({ "呵呵": "嘿嘿", "呵呵呵": "哈哈" })
+	}
+});
+});
+			</script>
 			<li>自动生成表格
-				<table class="table table-1">
+				<table class="table table-3">
 		<thead>
 			<tr>
 				<td data-property="@index" style="width: 1em;"></td>
@@ -38,7 +78,7 @@ var data = [
 {"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "2014年6月15日 下午5:00:39 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "马丁"}],"url": "https://www.neurun.com/doctors_office/input_task.html","description": "呵呵呵","input": {"date": {"date": 1402822911681}}},
 {"_id": {"oid": "53a9999a4ca4582000000000"},"name": "2014年6月24日 下午11:30:12 任务","item": [{"_id": {"oid": "536ed2ee0edab7c83b9e79ae"},"name": "外星人 4710 860"}],"url": "http://google.com","description": "呵呵","input": {"date": {"date": 1403623834514}}}
 ];
-$(".table.table-1").table({
+$(".table.table-3").table({
 	source: data,
 	custom: {
 		input: $.table.date_n_ip,
@@ -115,7 +155,7 @@ $(".table.table-2").table({
 });
 			</script>
 			<li>部分载入
-				<table class="table table-3">
+				<table class="table table-1">
 					<thead>
 						<tr>
 							<td data-property="@index" style="width: 3em;"></td>
@@ -131,7 +171,7 @@ $(".table.table-2").table({
 			<script defer="defer">
 $(function () {
 var pos = 0, template = {"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "name ","description":"description ", "input": 0};
-$(".table.table-3").table({
+$(".table.table-1").table({
 	source: function() {
 		var results = { $skip: pos, $limit: 2, $count: 100 },
 			array = results.$array = [];
@@ -152,7 +192,7 @@ $(".table.table-3").table({
 });
 			</script>
 			<li>部分载入（大数据量）
-				<table class="table table-4">
+				<table class="table table-0">
 					<thead>
 						<tr>
 							<td data-property="@index" style="width: 3em;"></td>
@@ -168,7 +208,7 @@ $(".table.table-3").table({
 			<script defer="defer">
 $(function () {
 var pos = 0, template = {"_id": {"oid": "539d60ff2b43b8770000004a"},"name": "name ","description":"description ", "input": 0};
-$(".table.table-4").table({
+$(".table.table-0").table({
 	source: function() {
 		var results = { $skip: pos, $limit: 100, $count: 1000 },
 			array = results.$array = [];

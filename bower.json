@@ -1,6 +1,9 @@
 {
   "name": "jQuery.table",
-  "main": "jQuery.table.js",
+  "main": [
+    "jquery.table.js",
+    "jquery.table.css"
+  ],
   "version": "0.0.0",
   "license": "MIT",
   "ignore": [
