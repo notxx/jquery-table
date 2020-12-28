@@ -424,7 +424,10 @@ var defaults = {
 };
 
 $.fn.table = function(method) {
-	if(!this.is("table")) return this;  // stop here if the table does not exist
+	if(!this.is("table")) {  // stop here if the table does not exist
+		console.warn("host not table");
+		return this;
+	}
 
 	if (typeof(method) == 'string' && method.charAt(0) != '_' && methods[method]) {
 		return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -572,13 +575,13 @@ $.table.overflow = function(options) { // 鼠标悬停显示溢出
 			$text.text(val);
 		}
 
-		$td.hover(function() {
+		$td.on("mouseenter", function() {
 			$text.addClass("hover");
 			if ($td.hasClass("overflowed")) return;
 			var w0 = $td.width(),
 				w1 = $text.width();
 			if (w0 < w1) $td.addClass("overflowed");
-		}, function() {
+		}).on("mouseleave", function() {
 			$text.removeClass("hover");
 		});
 		return $td;
