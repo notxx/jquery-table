@@ -27,7 +27,7 @@ methods.init = function(options) { // 初始化
 		if (options.source === "virtual") { // 虚拟数据源，即手工敲入行
 		} else if (typeof options.source === "string") { // 数据源是字符串
 		} else if ($.isArray(options.source)) { // 数据源是数组
-		} else if ($.isFunction(options.source)) { // 数据源是函数
+		} else if (typeof options.source === "function") { // 数据源是函数
 		} else {
 			return false;
 		}
@@ -132,7 +132,7 @@ methods.link = function table_link(event1, event2) { // link two events
 methods.load = function table_load() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
-	var data = $.isFunction(options.requestData)
+	var data = (typeof options.requestData === "function")
 			? options.requestData({ $skip: 0, $limit: options.limit })
 			: options.requestData;
 	table.data(_const.cache, null);
@@ -144,13 +144,13 @@ methods.load = function table_load() { // 载入数据
 			dataType: options.requestDataType || "json",
 			data: data || { $skip: 0, $limit: options.limit }
 		}).done(function(data) {
-			if ($.isFunction(options.responseData))
+			if (typeof options.responseData === "function")
 				data = options.responseData(data);
 			table.table("consume", data);
 		});
 	} else if ($.isArray(options.source)) { // 数据源是数组
 		table.table("consume", options.source);
-	} else if ($.isFunction(options.source)) { // 数据源是函数
+	} else if (typeof options.source === "function") { // 数据源是函数
 		table.table("consume", options.source(data));
 	}
 	return this;
@@ -158,7 +158,7 @@ methods.load = function table_load() { // 载入数据
 methods.more = function table_more() { // 载入数据
 	var table = this, options = table.data(_const.options),
 		tbody = table.find("tbody"), cache = table.data(_const.cache);
-	var data = $.isFunction(options.requestData)
+	var data = (typeof options.requestData === "function")
 			? options.requestData({ $skip: cache.next, $limit: options.limit })
 			: options.requestData,
 		$more = table.find("caption.more");
@@ -178,11 +178,11 @@ methods.more = function table_more() { // 载入数据
 			data: data || { $skip: cache.next, $limit: options.limit }
 		}).done(function(responseData) {
 			cache.loading = false;
-			if ($.isFunction(options.responseData))
+			if (typeof options.responseData === "function")
 				responseData = options.responseData(responseData);
 			table.table("consume", responseData);
 		});
-	} else if ($.isFunction(options.source)) { // 数据源是函数
+	} else if (typeof options.source === "function") { // 数据源是函数
 		if (cache.loading)
 			return this;
 		cache.loading = true;
@@ -191,7 +191,7 @@ methods.more = function table_more() { // 载入数据
 		window.setTimeout(function() {
 			cache.loading = false;
 			var responseData = options.source(data);
-			if ($.isFunction(options.responseData))
+			if (typeof options.responseData === "function")
 				responseData = options.responseData(responseData);
 			table.table("consume", responseData);
 		}, 1500);
@@ -254,13 +254,13 @@ methods.rows = function table_rows(row, rowIndex) { // 绘制一行
 	var table = this, options = table.data(_const.options), result = [];
 	$.each(options.rows, function() {
 		var _row = this,
-			$tr = ($.isFunction(options.tr) ? options.tr(row) 
+			$tr = ((typeof options.tr === "function") ? options.tr(row) 
 				: $("<tr>")).addClass(options.defaultClass.row),
 			cells = [];
 		$(_row).each(function () {
 			var _column = this["data-property"], extra = $.extend({}, this), $td;
 			var val;
-			if ($.isFunction(options.custom[_column])) { // 自定义单元格生成者
+			if (typeof options.custom[_column] === "function") { // 自定义单元格生成者
 				val = options.custom[_column].apply($tr, [ row, extra, rowIndex ]);
 			}
 			else {
@@ -269,7 +269,7 @@ methods.rows = function table_rows(row, rowIndex) { // 绘制一行
 			if (typeof val !== "number" && !val) { // 没有值
 				$td = $("<td>", extra).addClass(_column).text("");
 			}
-			else if (!$.isFunction(val.is)) { // 基本值
+			else if (typeof val.is !== "function") { // 基本值
 				$td = $("<td>", extra).addClass(_column).text(val.toString());
 			}
 			else if (val.is("td")) { // 直接产生单元格
@@ -313,8 +313,8 @@ methods.draw = function table_draw(data) { // 将缓存绘制到表格
 			return index += this.rows.length;
 		}
 		intact = false;
-		var filter = $.isFunction(options.filter),
-			hasRowClass = $.isFunction(options.rowClass);
+		var filter = (typeof options.filter === "function"),
+			hasRowClass = (typeof options.rowClass === "function");
 		if (filter || hasRowClass) { // 应用选项中的动态过滤/动态类
 			var filtered = filter ? options.filter(this.data) : true,
 				rowClass = hasRowClass ? options.rowClass(this.data) : false;
@@ -383,7 +383,7 @@ function _eval_set(context, expr, value) { // 对表达式求值
 }
 function _sort(cache, field, order, options) { // 对缓存排序
 	var func = options.sort[options.sorting.field]
-	if ($.isFunction(func))
+	if (typeof func === "function")
 		return func(cache, options.sorting.field, options.sorting.order);
 	else if (typeof func === "string")
 		return options.defaultSort(cache, func, options.sorting.order); // using replacement field
@@ -488,7 +488,7 @@ $.table.date_n_ip = function(row, extra) { // 输出日期和IP
 };
 $.table.moment_v2 = function(format) { // 以moment()的方式输出日期
 	return (function(row, extra) {
-		if (!$.isFunction(moment)) { return; }
+		if (typeof moment !== "function") { return; }
 		var field = extra["data-property"], value = row[field];
 		return moment(value.$date).format(format);
 	});
@@ -502,8 +502,8 @@ $.table.hover = function(options) { // 鼠标悬停显示按钮
 
 		// 单元格内容
 		var field = options.field || extras["data-property"],
-			text = $.isFunction(options.text) ? options.text(row, extras) : options.text;
-		if ($.isFunction(options.content)) {
+			text = (typeof options.text === "function") ? options.text(row, extras) : options.text;
+		if (typeof options.content === "function") {
 			$text.append(options.content(row, extras));
 		} else if (text) {
 			$text.text(text);
@@ -513,27 +513,27 @@ $.table.hover = function(options) { // 鼠标悬停显示按钮
 		}
 
 		// 按钮分组
-		var group = $.isFunction(options.group) ? options.group(row, extras) : options.group;
+		var group = (typeof options.group === "function") ? options.group(row, extras) : options.group;
 		if (group) { $group.addClass("btn-group"); }
 		// 按钮内容
-		var buttons = $.isFunction(options.buttons) ? options.buttons(row, extras) : options.buttons;
+		var buttons = (typeof options.buttons === "function") ? options.buttons(row, extras) : options.buttons;
 		$.each(buttons || [], function(i, button) {
 			var $btn = $('<a class="btn btn-xs">', button.extras || {}).appendTo($group),
-				content = $.isFunction(button.content) ? button.content(row, extras) : button.content,
-				text = $.isFunction(button.text) ? button.text(row, extras) : button.text;
+				content = (typeof button.content === "function") ? button.content(row, extras) : button.content,
+				text = (typeof button.text === "function") ? button.text(row, extras) : button.text;
 			if (content) {
 				$btn.append(content);
 			} else {
 				$btn.text(text);
 			}
-			if ($.isFunction(button.href)) {
+			if (typeof button.href === "function") {
 				$btn.attr("href", button.href(row, extras));
 			} else if (button.href) {
 				$btn.attr("href", button.href);
-			} else if ($.isFunction(button.click)) {
+			} else if (typeof button.click === "function") {
 				$btn.attr("href", "javascript:void(0)").click(function(e) { button.click(e, row, extras); });
 			}
-			var clazz = $.isFunction(button.class) ? button.class(i, button, row, extras) : button.class;
+			var clazz = (typeof button.class === "function") ? button.class(i, button, row, extras) : button.class;
 			if (clazz) { $btn.addClass(clazz); }
 		});
 
@@ -565,8 +565,8 @@ $.table.overflow = function(options) { // 鼠标悬停显示溢出
 
 		// 单元格内容
 		var field = options.field || extras["data-property"],
-			text = $.isFunction(options.text) ? options.text(row, extras) : options.text;
-		if ($.isFunction(options.content)) {
+			text = (typeof options.text === "function") ? options.text(row, extras) : options.text;
+		if (typeof options.content === "function") {
 			$text.append(options.content(row, extras));
 		} else if (text) {
 			$text.text(text);
