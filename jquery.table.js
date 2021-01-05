@@ -578,9 +578,20 @@ $.table.overflow = function(options) { // 鼠标悬停显示溢出
 		$td.on("mouseenter", function() {
 			$text.addClass("hover");
 			if ($td.hasClass("overflowed")) return;
-			var w0 = $td.width(),
-				w1 = $text.width();
-			if (w0 < w1) $td.addClass("overflowed");
+			var $tr = $td.closest("tr"),
+				w1 = $td.width(),
+				w0 = $text.width();
+			if (w1 < w0) {
+				var w0max = $tr.width() - $td.offset().left + $tr.offset().left + 1;
+				$td.addClass("overflowed");
+				$(window).one("resize", function() { $td.removeClass("overflowed"); });
+				if (w0max < w0) {
+					$td.addClass("multiline");
+					$text.css({
+						"--max-width": w0max
+					});
+				}
+			}
 		}).on("mouseleave", function() {
 			$text.removeClass("hover");
 		});
